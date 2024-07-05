@@ -3,7 +3,9 @@
 The piRNA pathway is crucial for protecting metazoan genomes from transposable elements, with piRNAs in *Drosophila melanogaster* primarily originating from defective transposons in piRNA clusters. Existing tools are optimized for annotating piRNA clusters in model organisms, and they often rely on assumptions that may not apply to non-model insects, where the piRNA pathway is less understood. We therefore implemented a simple annotation approach to determine piRNA clusters in non-model species that utilizes very little assumptions on the biology of the piRNA pathway. We validated it for *Aedes* mosquitoes, but it should be versatile enough to work with a variety of insect species.
 We hope that it will be useful in exploring the piRNA pathway in different non-model insect species but will not provide any guarantee that the pipeline provides sensible results for your application.  
 
-
+<img src=https://github.com/vanrijlab/piRNAClusterAnnotation/assets/29331754/a24417b9-50e0-412f-9662-b73ea2826c77 width=800>
+  
+  
 ## Installation
 1.	Clone the repository
 ```bash
@@ -19,7 +21,7 @@ chmod +x AnnotatepiRNAclusters.sh
 ## Requirements
 Install [Bedtools software](https://bedtools.readthedocs.io/en/latest/) from the Quinlan lab before using the piRNA cluster annotation pipeline. Additionally, you will need the following files:
 - Two BAM files containing small RNA reads mapped to the genome of interest. One file needs to contain all small RNA reads that map at least one time to the genome, while the other should contain the same data, however, reads that map ambigously (more than once) to the genome removed (For an example of how to map small RNA reads to a genome see [Example](https://github.com/vanrijlab/piRNAClusterAnnotation/edit/main/README.md#example)).
-- A tab-delimited genome file defining the chromosome lengths.  
+- A tab-delimited chromosome file defining the chromosome lengths.  
 
 ## Usage
 
@@ -43,13 +45,13 @@ The script AnnotatepiRNAclusters.sh will perform the actual cluster annotation. 
 bash AnnotatepiRNAclusters.sh \
 	-i multimappers.piRNAs.bed \
 	-u uniquemapper.piRNAs.bed \
-	-g genomefile.tab \
+	-g chromfile.tab \
 	[options]
 ```
 The command line options are:
 - -i multimappers: a bed file containing all piRNA reads including single and multimapping reads (required)
 - -u unique mappers: a bed file containing only piRNA reads that map unambiguously (required)
-- -g genome file: a tab-delimited file containing the size of all chromosomes or contigs (required)
+- -g chromosome file: a tab-delimited file containing the size of all chromosomes or contigs (required)
 - -a: Minimal number of piRNAs that need to map to a window (default: 5)
 - -d: Maximum distance between two windows to be merged (default: 5000)
 - -c: Minimal number of uniquely mapping piRNAs that need to map to a cluster (default: 5)
@@ -102,10 +104,13 @@ After annotation of the piRNA clusters, the clusters can be visually inspected u
 
 ## Example 
 
-This example is based on small RNA sequencing data from female carcasses of the Asian tiger mosquito *Aedes albopictus*. The raw data is available at the NCBI Sequence Read Archive under the accession number SRR11095788. For this example we clipped the adapters with Cutadapt, and then mapped the clipped reads with bowtie to the *Aedes albopictus* [reference sequence]( https://vectorbase.org/common/downloads/release-68/AalbopictusFoshanFPA/fasta/data/VectorBase-68_AalbopictusFoshanFPA_Genome.fasta) available at [Vectorbase]( https://vectorbase.org/vectorbase/app/downloads) (It is possible to use other software as well). This step was performed twice:
+#### Mapping
+This example is based on small RNA sequencing data from female ovaries of the Asian tiger mosquito *Aedes albopictus*. The raw data is available at the NCBI Sequence Read Archive under the accession number SRR12512270. For this dataset, the adapters are already clipped.  We will mapp the clipped reads with bowtie to the *Aedes albopictus* [reference sequence]( https://vectorbase.org/common/downloads/release-68/AalbopictusFoshanFPA/fasta/data/VectorBase-68_AalbopictusFoshanFPA_Genome.fasta) available at [Vectorbase]( https://vectorbase.org/vectorbase/app/downloads) (It is possible to use other software as well). We do ot allow mismatches to restrict the analysis to high-confidence reads only. However, if your small RNA dataset is not derived from the reference strain the referece annotation is based on, or if a reference genome for your species of interest is not available and you need to map to a cosely related species, you might need to increase the number of mismatches that are allowed.  
+The mapping step needs to be performed twice:
 ```bash
 # First mapping: considering all mapped reads that map without mismatches
-# It is important to randomly distribute multimapping reads with the option -M 1 
+# It is important to randomly distribute multimapping reads with the option --best --strata -M 1 
+# Mismatches to the reference genome are not allowed (-v 0)
 
 bowtie genome_index clipped_reads.fastq.gz \
 	--best --strata \
@@ -118,11 +123,13 @@ bowtie genome_index clipped_reads.fastq.gz \
 # Second mapping: discard reads that map more than one time with option -m 1
 
 bowtie genome_index clipped_reads.fastq.gz \
-	-v [number_of_mismatches] -m 1 -S | \
+	-v 0 -m 1 -S | \
 	samtools view -Sb -F 4 - | \
 	samtools sort - -o uniquemappers.bam 
 ```
-Since these file are large, we, we will only continue with a randomly sampled subset of reads, and only reads that map to the scaffold SWKY01000005 which corresponds to a large region on chromosome 2. These two BAM files are provided as example data. 
+Since these file are large, we will continue only with reads that map to the scaffold SWKY01000014 which corresponds to a region on chromosome 3. These two BAM files are provided as example data and can be downloaded from the ExampleData folder on this repository. 
+
+#### Extracting piRNA reads
 The next step is to isolate piRNA-sized reads, and to extract their 5’ end position. However, it can be useful to first remove all reads that potentially contaminate the fraction of genuine piRNAs. For that, first get the genomic positions of all tRNA, rRNA and miRNA genes from a GFF3 gene annotation file with: 
 
 ```bash
@@ -135,36 +142,52 @@ and then remove all reads with:
 bedtools intersect -a multimappers.bam -b unwanted.gff -v > multimappers_filtered.bam 
 ```
 
-For the sake of this example, however, we skipped this step and continue with the extraction of piRNA-sized (for *Ae. albopictus* we use 25-30nt) reads from both BAM files:
+For the sake of this example, however, we just skip this step and continue with the extraction of piRNA-sized reads from both BAM files. For *Ae. albopictus* we will use 25-30nt.
 
 ```bash
 # First for all multimapping reads
 
 bash ExtractpiRNAs.sh -i multimappers.bam -m 25 -M 30
 
-# Then for all uniquely mapping reads
+# Then run again for all uniquely mapping reads
 
 bash ExtractpiRNAs.sh -i uniquemappers.bam -m 25 -M 30 
 ```
 
-The resulting files will be called multimappers.piRNAs.bed and uniquemappers.piRNAs.bed, and serve as input for the cluster annotation.
-In addition to these to BED files, we require a genome file that indicates the lengths of all chromosomes (or in this case scaffolds). You can easily create it from one of the BAM files with:
+The resulting files will be called multimappers.piRNAs.bed and uniquemappers.piRNAs.bed, and serve as input for the cluster annotation pipeline.  
+
+Note that the size of piRNAs can vary between species. For example, *D. melanogaster* produces shorter piRNAs than *Ae. albopictus* (average of 25nt vs 28nt). If you are not sure what size range to select for your species, it is a good idea to create a simple size profile of all your reads and use this to guide your decision. For that simply run:
+```bash
+samtools view multimappers.bam | cut -f10 | awk '{ print length }' | sort | uniq -c > sizeprofile.tab
+```
+and plot the data as bar chart: 
+  
+<img src="https://github.com/vanrijlab/General/assets/29331754/18da936e-719f-4306-8fc1-9c2709170457" width =500>
+
+As you can see in this example, especially in the ovary of *Ae. albopictus* a peak of longer small RNAs corresponding to piRNAs can be distuingished from miRNAs and siRNAs. Most of those reads fall in the range of ~25-30nt. However, keep in mind that piRNA reads might not be as abundant or clearly distinguishable in every tissue (as this is the case for small RNAs from carcasses of *Ae. albopictus*).  
+ 
+   
+  
+#### Generating a chromosome file  
+In addition to the piRNA BED files, we require a chromosome file that indicates the lengths of all chromosomes (or in this case scaffolds) for the cluster annotation. You can easily create it from one of the BAM files with:
 
 ```bash
 samtools view -H multimappers.bam | \
 	grep @SQ | \
-	sed 's/@SQ\tSN:\|LN://g' > genomefile.tab
+	sed 's/@SQ\tSN:\|LN://g' > chromfile.tab
 ```
-
+#### Annotating piRNA clusters
 Let’s say we want to annotate piRNA clusters using the default values. Then simply use:
 ```bash
 bash AnnotatepiRNAclusters.sh \
 	-i multimappers.piRNAs.bed \
 	-u uniquemappers.piRNAs.bed \
-	-g genomefile.tab
+	-g chromfile.tab
 ```
-
-However, what if the optimal threshold values are not known *a priori*? Then run the annotation pipeline within a ```for``` loop for testing multiple different values (or even all combinations of values) and extract summary statistics that can guide the decision by using the loop-mode:
+With the provided example datasets, around 90% of all piRNAs should be located in 128 annotated piRNA clusters. If we had used the entire dataset, that fraction would be lower though (~43% of piRNAs mapping to clusters).
+#### Determining optimal threshold values
+However, what if the optimal threshold values are not known *a priori*? Then run the annotation pipeline within a ```for``` loop for testing multiple different values (or even all combinations of values) and extract summary statistics that can guide the decision. Keep in mind that this can take a long time to run, depending on how large your files are and how many different combinations of threshold valuesyou want to test.  
+Run the pipeline using the loop-mode:
 
 ```bash
 # Testing multiple values for the minimal amount of piRNAs that need to map to a window (1, 5, 10, 50 and 100)
@@ -176,13 +199,13 @@ for min_piRNAs in 1 5 10 50 100; do
 		bash AnnotatepiRNAclusters.sh \
 			-i multimappers.piRNAs.bed \
 			-u uniquemappers.piRNAs.bed \
-			-g genomefile.tab \
+			-g chromfile.tab \
 			-a "${min_piRNAs}" \
 			-d "${dist}" 
 	done
 done
 ```
-  
+The resulting stat file can be used to select for the best combination of thresholds. A general assumption based on studies in fruit flies, silk worm, zebrafish, and mice is that piRNA clusters are, in general, large regions that produce a considerable part of the total piRNA pool. Therefore, the threshold values should be optimized so that a substantial fraction of piRNAs map to large clusters (*Fract_piRNAs_clusters* and *Av_length* should be maximized). At the same time, the fraction of the genome that is covered by clusters should be relatively low in order to keep the clusters compact (*Frac_genome* should be minimized). The decisions on threshold values will have to strike a fine balance between completeness and accuracy of the cluster annotation and the optimal conditions may additionally differ depending on the aim of your study. A visual example can be found in the supplementary materials of [this paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-020-02141-w).   
 ## Publications
 
 ### Description of the piRNA cluster annotation
