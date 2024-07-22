@@ -3,7 +3,7 @@
 The piRNA pathway is crucial for protecting metazoan genomes from transposable elements, with piRNAs in *Drosophila melanogaster* primarily originating from defective transposons in piRNA clusters. Existing tools are optimized for annotating piRNA clusters in model organisms, and they often rely on assumptions that may not apply to non-model insects, where the piRNA pathway is less understood. We therefore implemented a simple annotation approach to determine piRNA clusters in non-model species that utilizes very little assumptions on the biology of the piRNA pathway. We validated it for *Aedes* mosquitoes, but it should be versatile enough to work with a variety of insect species.
 We hope that it will be useful in exploring the piRNA pathway in different non-model insect species but will not provide any guarantee that the pipeline provides sensible results for your application.  
 
-<img src=https://github.com/vanrijlab/piRNAClusterAnnotation/assets/29331754/a24417b9-50e0-412f-9662-b73ea2826c77 width=800>
+<img src=https://github.com/user-attachments/assets/e01fe995-2b06-47bd-a0f9-6d6b83e0e749 width=800>
   
   
 ## Installation
@@ -97,7 +97,7 @@ The pipeline will output two files, or three files if run in loop-mode:
   
     
 	
-After annotation of the piRNA clusters, the clusters can be visually inspected using IGV or the UCSC Genome browser. Here is an example of a piRNA cluster in *Ae. albopictus*:  
+After annotation of the piRNA clusters, the clusters can be visually inspected using IGV or the UCSC Genome browser. Here is an example of a piRNA cluster in *Ae. albopictus* (SWKY01000101:21730-118879):  
   
   
 ![piRNACluster_example](https://github.com/vanrijlab/General/assets/29331754/df1d78b8-446b-466e-a2ca-98fc913adc4b)
