@@ -1,7 +1,7 @@
 # Annotation of piRNA clusters in non-model insect species
 ## Purpose of the pipeline
 The piRNA pathway is crucial for protecting metazoan genomes from transposable elements, with piRNAs in *Drosophila melanogaster* primarily originating from defective transposons in piRNA clusters. Existing tools are optimized for annotating piRNA clusters in model organisms, and they often rely on assumptions that may not apply to non-model insects, where the piRNA pathway is less understood. We therefore implemented a simple annotation approach to determine piRNA clusters in non-model species that utilizes very little assumptions on the biology of the piRNA pathway. We validated it for *Aedes* mosquitoes, but it should be versatile enough to work with a variety of insect species.
-We hope that it will be useful in exploring the piRNA pathway in different non-model insect species but will not provide any guarantee that the pipeline provides meaningful results for your application.  
+We hope that it will be useful in exploring the piRNA pathway in different non-model insect species but we do not provide any guarantee that the pipeline provides provide any guarantee that the pipeline provides meaningful results for your application.  
 
 <img src=https://github.com/user-attachments/assets/10bedb2f-72de-40e7-b204-96cfa4400f52 width=800>
   
