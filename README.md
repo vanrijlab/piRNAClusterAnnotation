@@ -79,7 +79,9 @@ The pipeline will output two files, or three files if run in loop-mode:
 	|  8		 | Unique_piRNAs_per_million	 | Number of unambiguously mapping piRNAs per million piRNA reads mapping to a cluster	 |  
 	|  9		 | Unique_piRNA_positions		 | number of positions at which  piRNAs map unambiguously	 |  
 	|  10		 | Perc_plus					 | Fraction of piRNAs in a cluster mapping to the positive strand [%]	 |  
-	|  11		 | Perc_min						 | Fraction of piRNAs in a cluster mapping to negative strand [%]	 |  
+	|  11		 | Perc_min						 | Fraction of piRNAs in a cluster mapping to negative strand [%]	 |   
+
+Additionally, the genomic coordinates of the clusters will be stored as bed file. If more 90% or more of the piRNAs map to only one stand, column 6 will indicate positive or negative orientation, otherwise the cluster is marked as unstranded. 
 - *stat file*: summary statistics of the annotation (in loop-mode only):    
   
 	| Column	| Column name	| Description	|  
@@ -222,3 +224,7 @@ The resulting stat file can be used to select for the best combination of thresh
 If you encounter any issues or have questions, please open an issue on GitHub or contact us at rebecca [dot] halbach [at] radboudumc [dot] nl.
 
 
+## Updates
+
+2025-08-20:  
+* Pipeline will output cluster coordinates in bed format as separate file.
