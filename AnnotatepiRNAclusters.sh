@@ -205,9 +205,9 @@ out_log=log."${out_file}"
 touch "${out_directory}"/"${out_log}" 
 # summary file with statistics on clusters
 if [ "${loop}" = "yes" ] && [ ! -f stats."${out_file}" ]; then
-	out_stats="${out_directory}"/stats."${out_file}"
-	touch "${out_directory}"/stats."${out_file}"
-	printf "Min_piRNAs\tMax_dist\tMin_unique_piRNAs\tMin_unique_pos\tMin_size\tMin_density\tNo_clusters\tAv_length\tFrac_genome\tFrac_piRNAs_clusters\n" >> "${out_directory}"/stats."${out_file}"
+	out_stats="${out_directory}"/stats.clusterannotation.txt
+	touch "${out_directory}"/stats.clusterannotation.txt
+	printf "Min_piRNAs\tMax_dist\tMin_unique_piRNAs\tMin_unique_pos\tMin_size\tMin_density\tNo_clusters\tAv_length\tFrac_genome\tFrac_piRNAs_clusters\n" >> "${out_stats}"
 fi
 
 
@@ -232,8 +232,6 @@ The output will be stored in the folder: ${out_directory}.
 
 EOF
 
-
-# TO DO: remove piRNA-sized reads selection from script, but put this before?
 
 
 # Make windows for cluster prediction
@@ -404,7 +402,13 @@ printf 'Chrom\tStart\tEnd\tCluster_length\tTotal_piRNAs\tpiRNA_density\tpiRNAs_p
 	cat - "${out_directory}"/"${out_file}" \
 	> "${out_directory}"/tmp/temp && mv "${out_directory}"/tmp/temp "${out_directory}"/"${out_file}"
 
+# Create a bed file with just genome coordinates
 
+cut -f1-3,10 "${out_directory}"/"${out_file}" |
+	tail -n +2 | # remove header
+	# cluster is stranded if 90% or more of the reads map to only one strand, otherwise strand is undetermined
+	awk '{ if ($4 >= 90) strand="+"; else if ($4 <= 10) strand="-"; else strand="."; print $1, $2, $3, ".", ".", strand }' OFS="\t" > "${out_directory}"/"${out_file}".bed
+	
 ### 7. calculate summary statistics for the annotation
 genome_length=`awk '{ sum += $2 } END { print sum }' "${chrom_file}"`
 total_length_clusters=`awk '{ sum += $4 } END { print sum }' "${out_directory}"/"${out_file}"`
@@ -419,7 +423,7 @@ genomic_space=`echo "scale=5; ${total_length_clusters} / ${genome_length} * 100 
 
 # if run in loop-mode, print summary statistics in separate file for easy comparison
 if [ "${loop}" = "yes" ]; then
-	printf "${min_pirnas}\t${max_distance}\t${min_unique_pirnas}\t${min_unique_pirna_positions}\t${min_size_cluster}\t${min_pirna_density}\t$no_cluster\t$average_length_clusters\t$genomic_space\t$fraction_pirnas_in_clusters\n" >> "${out_directory}"/stats."${out_file}"
+	printf "${min_pirnas}\t${max_distance}\t${min_unique_pirnas}\t${min_unique_pirna_positions}\t${min_size_cluster}\t${min_pirna_density}\t${no_cluster}\t${average_length_clusters}\t${genomic_space}\t${fraction_pirnas_in_clusters}\n" >> "${out_stats}"
 fi
 
 # clean up temporary files
