@@ -407,7 +407,10 @@ printf 'Chrom\tStart\tEnd\tCluster_length\tTotal_piRNAs\tpiRNA_density\tpiRNAs_p
 cut -f1-3,10 "${out_directory}"/"${out_file}" |
 	tail -n +2 | # remove header
 	# cluster is stranded if 90% or more of the reads map to only one strand, otherwise strand is undetermined
-	awk '{ if ($4 >= 90) strand="+"; else if ($4 <= 10) strand="-"; else strand="."; print $1, $2, $3, ".", ".", strand }' OFS="\t" > "${out_directory}"/"${out_file}".bed
+	awk '{ if ($4 >= 90) strand="+"; else if ($4 <= 10) strand="-"; else strand="."; print $1, $2, $3, ".", ".", strand }' OFS="\t" |
+	sort -k1,1 -k2n,3n |
+	# remove white-space
+	sed 's/[[:space:]]*$//' > "${out_directory}"/"${out_file}".bed
 	
 ### 7. calculate summary statistics for the annotation
 genome_length=`awk '{ sum += $2 } END { print sum }' "${chrom_file}"`
