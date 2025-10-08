@@ -204,10 +204,13 @@ touch "${out_directory}"/"${out_file}"
 out_log=log."${out_file}"
 touch "${out_directory}"/"${out_log}" 
 # summary file with statistics on clusters
+out_stats="${out_directory}"/stats.clusterannotation.txt
 if [ "${loop}" = "yes" ] && [ ! -f stats."${out_file}" ]; then
-	out_stats="${out_directory}"/stats.clusterannotation.txt
-	touch "${out_directory}"/stats.clusterannotation.txt
-	printf "Min_piRNAs\tMax_dist\tMin_unique_piRNAs\tMin_unique_pos\tMin_size\tMin_density\tNo_clusters\tAv_length\tFrac_genome\tFrac_piRNAs_clusters\n" >> "${out_stats}"
+	# if the stats file doesn't exist, create it and add header
+    if [ ! -f "${out_stats}" ]; then
+        touch "${out_stats}"
+        printf "Min_piRNAs\tMax_dist\tMin_unique_piRNAs\tMin_unique_pos\tMin_size\tMin_density\tNo_clusters\tAv_length\tFrac_genome\tFrac_piRNAs_clusters\n" >> "${out_stats}"
+    fi
 fi
 
 
