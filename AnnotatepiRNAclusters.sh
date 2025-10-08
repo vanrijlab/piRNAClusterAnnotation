@@ -198,10 +198,10 @@ fi
 
 # output files:
 # storing the actual annotation
-out_file=cluster_annotation.a"$min_pirnas".d"$max_distance".c"$min_unique_pirnas".p"$min_unique_pirna_positions"
+out_file=cluster_annotation.a"$min_pirnas".d"$max_distance".c"$min_unique_pirnas".p"$min_unique_pirna_positions".txt
 touch "${out_directory}"/"${out_file}" 
 # log file storing error messages and general info
-out_log=log."${out_file}"
+out_log=log."${out_file}".txt
 touch "${out_directory}"/"${out_log}" 
 # summary file with statistics on clusters
 out_stats="${out_directory}"/stats.clusterannotation.txt
